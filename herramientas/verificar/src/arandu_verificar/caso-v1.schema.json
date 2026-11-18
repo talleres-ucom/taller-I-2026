@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/talleres-ucom/taller-I-2026/esquema/caso-v1.schema.json",
+  "title": "Arandu · caso de aceptación · contrato v1 (Tarea 1)",
+  "description": "Un caso: una solicitud de inscripción con todo el estado que hace falta para decidirla, y el resultado esperado. El sistema recibe el instante: nunca lee el reloj.",
+  "type": "object",
+  "required": ["caso", "entrada", "esperado"],
+  "additionalProperties": false,
+  "properties": {
+    "caso": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$", "description": "Nombre corto y único. Conviene empezar por la regla: R5-contiguas-no-chocan"},
+    "descripcion": {"type": "string"},
+    "entrada": {"$ref": "#/$defs/entrada"},
+    "esperado": {"$ref": "#/$defs/resultado"}
+  },
+  "$defs": {
+    "instante": {"type": "string", "format": "date-time", "description": "ISO 8601 con zona horaria, por ejemplo 2027-02-03T10:00:00-03:00"},
+    "hora": {"type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"},
+    "entrada": {
+      "type": "object",
+      "required": ["periodo", "estudiante", "materias", "comisiones", "inscripciones", "solicitud"],
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "type": "object", "additionalProperties": false,
+          "properties": {"nota_minima": {"type": "integer", "minimum": 1, "maximum": 5, "default": 2}}
+        },
+        "periodo": {
+          "type": "object", "required": ["apertura", "cierre", "plazo_baja"], "additionalProperties": false,
+          "properties": {"apertura": {"$ref": "#/$defs/instante"}, "cierre": {"$ref": "#/$defs/instante"}, "plazo_baja": {"$ref": "#/$defs/instante"}}
+        },
+        "estudiante": {
+          "type": "object", "required": ["id", "historial"], "additionalProperties": false,
+          "properties": {
+            "id": {"type": "string"},
+            "historial": {
+              "type": "array",
+              "description": "Notas finales de períodos anteriores",
+              "items": {"type": "object", "required": ["materia", "nota"], "additionalProperties": false,
+                        "properties": {"materia": {"type": "string"}, "nota": {"type": "integer", "minimum": 1, "maximum": 5}}}
+            }
+          }
+        },
+        "materias": {
+          "type": "array",
+          "items": {"type": "object", "required": ["codigo", "correlativas"], "additionalProperties": false,
+                    "properties": {"codigo": {"type": "string"}, "correlativas": {"type": "array", "items": {"type": "string"}}}}
+        },
+        "comisiones": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["id", "materia", "cupo", "franjas"], "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string"}, "materia": {"type": "string"},
+              "cupo": {"type": "integer", "minimum": 0},
+              "franjas": {"type": "array", "minItems": 1,
+                          "items": {"type": "object", "required": ["dia", "inicio", "fin"], "additionalProperties": false,
+                                    "properties": {"dia": {"type": "integer", "minimum": 1, "maximum": 6, "description": "1 = lunes ... 6 = sábado"},
+                                                   "inicio": {"$ref": "#/$defs/hora"}, "fin": {"$ref": "#/$defs/hora"}}}}
+            }
+          }
+        },
+        "inscripciones": {
+          "type": "array",
+          "description": "Inscripciones del período, de todos los estudiantes (hacen falta para el cupo)",
+          "items": {"type": "object", "required": ["estudiante", "comision", "estado"], "additionalProperties": false,
+                    "properties": {"estudiante": {"type": "string"}, "comision": {"type": "string"}, "estado": {"enum": ["activa", "baja"]}}}
+        },
+        "solicitud": {
+          "type": "object", "required": ["comision", "instante"], "additionalProperties": false,
+          "properties": {"comision": {"type": "string"}, "instante": {"$ref": "#/$defs/instante"}}
+        }
+      }
+    },
+    "resultado": {
+      "oneOf": [
+        {"type": "object", "required": ["resultado"], "additionalProperties": false,
+         "properties": {"resultado": {"const": "aceptada"}}},
+        {"type": "object", "required": ["resultado", "motivo"], "additionalProperties": false,
+         "properties": {"resultado": {"const": "rechazada"}, "motivo": {"enum": ["R1", "R2", "R3", "R4", "R5", "R7"]}}}
+      ]
+    }
+  }
+}

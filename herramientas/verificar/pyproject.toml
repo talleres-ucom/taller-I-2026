@@ -1,0 +1,16 @@
+[project]
+name = "arandu-verificar"
+version = "1.0.0"
+description = "Taller I · corre casos de aceptación de Arandu (contrato v1) contra el sistema de cada estudiante"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4"]
+
+[project.scripts]
+arandu-verificar = "arandu_verificar:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/arandu_verificar"]
